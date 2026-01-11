@@ -7,13 +7,14 @@ from src.create_database import create_database, save_to_db_employers, create_ta
 def main():
     # получаем параметры базы данных
     params = config()
-    database_name = 'HH'
+    database_name = 'hh'
     # создаем базу и таблицы
     create_database(database_name, params)
-    create_tables_vacancies(params, database_name)
-    create_tables_employers(params, database_name)
+    create_tables_employers(database_name, params)
+    create_tables_vacancies(database_name, params)
 
-    # list_employer_id = ['2180','2748','3529','8884','1959252','68587','1740','3192913','9498112','2523']
+
+# list_employer_id = ['2180','2748','3529','8884','1959252','68587','1740','3192913','9498112','2523']
     # # Создание экземпляра класса для работы с API сайтов с вакансиями
     # for employer_id in list_employer_id:
     #     api = HH(employer_id=employer_id)

@@ -12,7 +12,6 @@ def database_exists(cursor, db_name):
     return cursor.fetchone() is not None
 
 
-
 def create_database(database_name: str, params: dict):
     """Функция для создания базы данных, если она не существует"""
 
@@ -32,6 +31,7 @@ def create_database(database_name: str, params: dict):
         if 'conn' in locals():
             conn.close()
 
+
 def create_tables_employers(database_name: str, params: dict):
     """Функция для создания таблиц в базе данных, если они не существуют"""
 
@@ -39,30 +39,35 @@ def create_tables_employers(database_name: str, params: dict):
     conn.autocommit = True
     with conn.cursor() as cur:
         try:
-            cur.execute("""CREATE TABLE employers (
-            employers_id SERIAL PRIMARY KEY,
-            name_employers VARCHAR(255) NOT NULL,
-            url VARCHAR(255) NOT NULL,
-            description VARCHAR(255)) """)
+            cur.execute("""CREATE TABLE employers
+                           (
+                               employers_id   SERIAL PRIMARY KEY,
+                               name_employers VARCHAR(255) NOT NULL,
+                               url            VARCHAR(255) NOT NULL,
+                               description    VARCHAR(255)
+                           ) """)
         except psycopg2.errors.DuplicateTable:
             print('Таблица "employers" уже существует')
         conn.commit()
         conn.close()
 
+
 def create_tables_vacancies(database_name: str, params: dict):
     conn = psycopg2.connect(dbname=database_name, **params)
     with conn.cursor() as cur:
         try:
-            cur.execute("""CREATE TABLE vacancies (
-            id SERIAL PRIMARY KEY,
-            employers_id int NOT NULL,
-            FOREIGN KEY (employers_id) REFERENCES employers (employers_id) ON DELETE CASCADE,
-            name_vacancies VARCHAR(255) NOT NULL,
-            url VARCHAR(255) NOT NULL,
-            experience VARCHAR(100),
-            schedule VARCHAR(100),
-            salary VARCHAR(100),
-            description VARCHAR(255))""")
+            cur.execute("""CREATE TABLE vacancies
+                           (
+                               id             SERIAL PRIMARY KEY,
+                               employers_id   int          NOT NULL,
+                               FOREIGN KEY (employers_id) REFERENCES employers (employers_id) ON DELETE CASCADE,
+                               name_vacancies VARCHAR(255) NOT NULL,
+                               url            VARCHAR(255) NOT NULL,
+                               experience     VARCHAR(100),
+                               schedule       VARCHAR(100),
+                               salary         VARCHAR(100),
+                               description    VARCHAR(255)
+                           )""")
         except psycopg2.errors.DuplicateTable:
             print('Таблица "vacancies" уже существует')
         conn.commit()
@@ -91,19 +96,8 @@ def save_to_db_employers(data: list[str:Any], params: dict, database_name) -> No
         conn.commit()
         conn.close()
 
+
 def save_to_db_vacancies(data: list[str:Any], params: dict, database_name) -> None:
     """Сохранение данных о вакансиях в базу данных"""
 
     pass
-
-def main_m():
-    # получаем параметры базы данных
-    params = config()
-    database_name = 'hh'
-    # создаем базу и таблицы
-    create_database(database_name, params)
-    create_tables_employers(database_name, params)
-    create_tables_vacancies(database_name, params)
-
-if __name__ == '__main__':
-    main_m()

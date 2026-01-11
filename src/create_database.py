@@ -39,14 +39,13 @@ def create_tables_employers(database_name: str, params: dict):
     conn.autocommit = True
     with conn.cursor() as cur:
         try:
-            cur.execute(f"SELECT 1 FROM employers ")
-        except psycopg2.errors.UndefinedTable:
             cur.execute("""CREATE TABLE employers (
             employers_id SERIAL PRIMARY KEY,
             name_employers VARCHAR(255) NOT NULL,
             url VARCHAR(255) NOT NULL,
             description VARCHAR(255)) """)
-
+        except psycopg2.errors.DuplicateTable:
+            print('Таблица "employers" уже существует')
         conn.commit()
         conn.close()
 
@@ -54,10 +53,9 @@ def create_tables_vacancies(database_name: str, params: dict):
     conn = psycopg2.connect(dbname=database_name, **params)
     with conn.cursor() as cur:
         try:
-            cur.execute(f"SELECT 1 FROM vacancies ")
-        except psycopg2.errors.UndefinedTable:
             cur.execute("""CREATE TABLE vacancies (
             id SERIAL PRIMARY KEY,
+            employers_id int NOT NULL,
             FOREIGN KEY (employers_id) REFERENCES employers (employers_id) ON DELETE CASCADE,
             name_vacancies VARCHAR(255) NOT NULL,
             url VARCHAR(255) NOT NULL,
@@ -65,6 +63,8 @@ def create_tables_vacancies(database_name: str, params: dict):
             schedule VARCHAR(100),
             salary VARCHAR(100),
             description VARCHAR(255))""")
+        except psycopg2.errors.DuplicateTable:
+            print('Таблица "vacancies" уже существует')
         conn.commit()
         conn.close()
 
@@ -88,10 +88,9 @@ def save_to_db_employers(data: list[str:Any], params: dict, database_name) -> No
                 """,
                 (name, url, experience, schedule, salary, description))
 
-
-
         conn.commit()
         conn.close()
+
 def save_to_db_vacancies(data: list[str:Any], params: dict, database_name) -> None:
     """Сохранение данных о вакансиях в базу данных"""
 

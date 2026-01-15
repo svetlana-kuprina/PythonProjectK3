@@ -5,7 +5,7 @@ from requests import Response
 class HH:
     """Класс для работы с API сервиса вакансий с платформой hh.ru."""
 
-    def __init__(self, employer_id) -> None:
+    def __init__(self, employer_id: list) -> None:
         """url1 - адрес API запроса информации о работодателе,
         url2 - адрес API запроса информации о вакансиях
         employer_id - id код работодателя"""
@@ -13,7 +13,6 @@ class HH:
         self.employer_id = employer_id
         self.url1 = f"https://api.hh.ru/employers/{employer_id}"
         self.url2 = f"https://api.hh.ru/vacancies?employer_id={employer_id}"
-
 
     def api_connections_employers(self) -> Response | None:
         """Метод проверки API. Происходит запрос и проверка статус-кода ответа hh.ru по работодателю."""
@@ -44,9 +43,3 @@ class HH:
             print(err)
         except Exception as e:
             print(e)
-
-
-if __name__ == "__main__":
-    api = HH(employer_id="1959252")
-    print(api.api_connections_employers())
-    print(api.api_connections_vacancies())

@@ -3,7 +3,7 @@ from typing import Any
 import psycopg2
 
 
-def database_exists(cursor, db_name):
+def database_exists(cursor, db_name: str) -> bool:
     """Функция для проверки базы данных"""
 
     cursor.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = %s", (db_name,))
@@ -26,24 +26,26 @@ def create_database(database_name: str, params: dict):
         print(f"Ошибка при проверке базы данных: {e}")
         return False
     finally:
-        if 'conn' in locals():
+        if "conn" in locals():
             conn.close()
 
 
-def create_tables_employers(database_name: str, params: dict):
+def create_tables_employers(database_name: str, params: dict) -> None:
     """Функция для создания таблиц в базе данных, если они не существуют"""
 
     conn = psycopg2.connect(dbname=database_name, **params)
     conn.autocommit = True
     with conn.cursor() as cur:
         try:
-            cur.execute("""CREATE TABLE employers
+            cur.execute(
+                """CREATE TABLE employers
                            (
                                employers_id   SERIAL PRIMARY KEY,
                                name_employers VARCHAR(255) NOT NULL,
                                url            VARCHAR(255) NOT NULL,
                                description    TEXT
-                           ) """)
+                           ) """
+            )
         except psycopg2.errors.DuplicateTable:
             print('Таблица "employers" уже существует')
         except psycopg2.errors.UniqueViolation as e:
@@ -51,11 +53,14 @@ def create_tables_employers(database_name: str, params: dict):
             conn.close()
 
 
-def create_tables_vacancies(database_name: str, params: dict):
+def create_tables_vacancies(database_name: str, params: dict) -> None:
+    """Функция для создания таблиц в базе данных, если они не существуют"""
+
     conn = psycopg2.connect(dbname=database_name, **params)
     with conn.cursor() as cur:
         try:
-            cur.execute("""CREATE TABLE vacancies
+            cur.execute(
+                """CREATE TABLE vacancies
                            (
                                id             SERIAL PRIMARY KEY,
                                employers_id   int          NOT NULL,
@@ -67,7 +72,8 @@ def create_tables_vacancies(database_name: str, params: dict):
                                salary_from    INT,
                                salary_to      INT,
                                description    TEXT
-                           )""")
+                           )"""
+            )
         except psycopg2.errors.DuplicateTable:
             print('Таблица "vacancies" уже существует')
         conn.commit()
@@ -75,40 +81,50 @@ def create_tables_vacancies(database_name: str, params: dict):
 
 
 def save_to_db_employers(data: list[str:Any], data_vac: list[str:Any], params: dict, database_name) -> None:
-    """Сохранение данных об организациях в базу данных"""
+    """Сохранение данных в базу данных"""
 
     try:
         conn = psycopg2.connect(dbname=database_name, **params)
         with conn.cursor() as cur:
             for data_dict in data:
-                name = data_dict.get('name')
-                url = data_dict.get('alternate_url')
-                description = data_dict.get('description')
+                name = data_dict.get("name")
+                url = data_dict.get("alternate_url")
+                description = data_dict.get("description")
                 cur.execute(
                     """
                     INSERT INTO employers (name_employers, url, description)
                     VALUES (%s, %s, %s) RETURNING employers_id
                     """,
-                    (name, url, description))
+                    (name, url, description),
+                )
                 employers_id = cur.fetchone()[0]
 
                 for data_dict_list in data_vac:
                     for data_dict_vac in data_dict_list:
-                        name = data_dict_vac.get('name')
-                        url = data_dict_vac.get('alternate_url')
-                        experience = data_dict_vac.get('description')
-                        schedule = data_dict_vac.get('schedule')
-                        salary = data_dict_vac.get('salary')
+                        name = data_dict_vac.get("name")
+                        url = data_dict_vac.get("alternate_url")
+                        experience = data_dict_vac.get("description")
+                        schedule = data_dict_vac.get("schedule")
+                        salary = data_dict_vac.get("salary")
                         if salary == None:
-                            salary = {'from': None, 'to': None}
-                        description = data_dict_vac.get('description')
+                            salary = {"from": None, "to": None}
+                        description = data_dict_vac.get("description")
                         cur.execute(
                             """
                             INSERT INTO vacancies (employers_id, name_vacancies, url, experience, schedule, salary_from,
                                                    salary_to, description)
                             VALUES (%s, %s, %s, %s, %s, %s, %s, %s) """,
-                            (employers_id, name, url, experience, schedule['name'], salary.get('from'), salary.get('to'),
-                             description))
+                            (
+                                employers_id,
+                                name,
+                                url,
+                                experience,
+                                schedule["name"],
+                                salary.get("from"),
+                                salary.get("to"),
+                                description,
+                            ),
+                        )
             conn.commit()
             conn.close()
     except psycopg2.Error as e:

@@ -10,11 +10,13 @@ class DBManager:
 
     def get_companies_and_vacancies_count(self):
         """Метод получает список всех компаний и количество вакансий у каждой компании."""
+
         conn = psycopg2.connect(dbname=self.database_name, **self.params)
         conn.autocommit = True
         with conn.cursor() as cur:
             try:
-                cur.execute("""SELECT name_employers, COUNT(vacancies.name_vacancies) FROM employers
+                cur.execute("""SELECT name_employers, COUNT(vacancies.name_vacancies)
+                               FROM employers
                                         JOIN vacancies USING (employers_id)
                                GROUP BY employers.name_employers""")
 
@@ -25,11 +27,12 @@ class DBManager:
     def get_all_vacancies(self):
         """Метод получает список всех вакансий с указанием названия компании,
          названия вакансии и зарплаты и ссылки на вакансию"""
+
         conn = psycopg2.connect(dbname=self.database_name, **self.params)
         conn.autocommit = True
         with conn.cursor() as cur:
             try:
-                cur.execute("""SELECT employers.name_employers, name_vacancies, salary_from, salary_to, vacancies.url 
+                cur.execute("""SELECT employers.name_employers, name_vacancies, salary_from, salary_to, vacancies.url
                                FROM vacancies
                                         JOIN employers USING (employers_id)""")
 
@@ -38,13 +41,43 @@ class DBManager:
             return cur.fetchall()
 
     def get_avg_salary(self):
-        """получает среднюю зарплату по вакансиям"""
-        pass
+        """Метод получает среднюю зарплату по вакансиям"""
+
+        conn = psycopg2.connect(dbname=self.database_name, **self.params)
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            try:
+                cur.execute("""SELECT AVG(salary_from), AVG (salary_to) FROM vacancies""")
+
+            except psycopg2.Error as e:
+                print(e)
+            return cur.fetchall()
 
     def get_vacancies_with_higher_salary(self):
-        """ получает список всех вакансий, у которых зарплата выше средней по всем вакансиям"""
-        pass
+        """Метод получает список всех вакансий, у которых зарплата выше средней по всем вакансиям"""
 
-    def get_vacancies_with_keyword(self):
-        """получает список всех вакансий, в названии которых содержатся переданные в метод слова, например python"""
-        pass
+        conn = psycopg2.connect(dbname=self.database_name, **self.params)
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            try:
+                cur.execute("""SELECT *
+                               FROM vacancies
+                               WHERE salary_from > (SELECT AVG(salary_from) FROM vacancies)
+                                  OR salary_to > (SELECT AVG(salary_to) FROM vacancies)""")
+
+            except psycopg2.Error as e:
+                print(e)
+            return cur.fetchall()
+
+    def get_vacancies_with_keyword(self, keyword):
+        """Метод получает список всех вакансий, в названии которых содержатся переданные в метод слова, например python"""
+
+        conn = psycopg2.connect(dbname=self.database_name, **self.params)
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            try:
+                cur.execute(f"""SELECT * FROM vacancies WHERE name_vacancies LIKE '%{keyword}%';""")
+
+            except psycopg2.Error as e:
+                print(e)
+            return cur.fetchall()
